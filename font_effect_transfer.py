@@ -83,10 +83,10 @@ S_pixels = []
 
 patch_sizes=[21,19,17,15,13,11,9,7,5];
 S_contour_nbrs = NearestNeighbors(n_neighbors=1, algorithm='ball_tree').fit(S_contour_set)
-for i in range(h-21):
-    for j in range(w-21):
-        patchsize = 21
-        max_patch=S_prime[i:i+21,j:j+21]
+for i in range(h-patch_sizes[0]):
+    for j in range(w-patch_sizes[0]):
+        patchsize = patch_sizes[0]
+        max_patch=S_prime[i:i+patch_sizes[0],j:j+patch_sizes[0]]
         for s in patch_sizes:
             patch = S_prime[i:i+s,j:j+s]
             if np.var(patch) > 0.02:
