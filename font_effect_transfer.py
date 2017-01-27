@@ -10,7 +10,7 @@ from sklearn.neighbors import NearestNeighbors
 
 from copy import copy, deepcopy
 import matplotlib.pyplot as plt
-
+import time
 
 
 # Read S and T as binary images
@@ -69,11 +69,12 @@ r_bar = 0.5*len(S_contour_set)*k+b
 # Define Pixel class
 class Pixel:
     pixelCount = 0
-    def __init__(self, coordinate, distance, patchsize, patch):
+    def __init__(self, coordinate, distance, patchsize, patch, effect):
         self.coordinate = coordinate
         self.distance = distance
         self.patchsize = patchsize
         self.patch = patch
+        self.effect = effect
         Pixel.pixelCount += 1
 
 # Calculate patchsize for each pixel
@@ -81,16 +82,21 @@ h = S_prime.shape[0]
 w = S_prime.shape[1]
 S_pixels = []
 
-patch_sizes=[21,19,17,15,13,11,9,7,5];
+patch_sizes=[29,25,21,17,13,9,5];
 S_contour_nbrs = NearestNeighbors(n_neighbors=1, algorithm='ball_tree').fit(S_contour_set)
+
+t0 = time.clock()
 for i in range(h-patch_sizes[0]):
     for j in range(w-patch_sizes[0]):
         patchsize = patch_sizes[0]
-        max_patch=S_prime[i:i+patch_sizes[0],j:j+patch_sizes[0]]
+        max_effect=S_prime[i:i+patch_sizes[0],j:j+patch_sizes[0]]
+        max_patch=S[i:i+patch_sizes[0],j:j+patch_sizes[0]]
         for s in patch_sizes:
-            patch = S_prime[i:i+s,j:j+s]
-            if np.var(patch) > 0.02:
+            effect = S_prime[i:i+s,j:j+s]
+            patch = S[i:i+s,j:j+s]
+            if np.var(effect) > 0.02:
                 patchsize = s
+                max_effect = effect
                 max_patch = patch
         d, index = S_contour_nbrs.kneighbors(np.array([i,j]).reshape(1,-1))
         if ~S[i,j]:
@@ -99,7 +105,33 @@ for i in range(h-patch_sizes[0]):
             d_skel, ind = S_skel_nbrs.kneighbors(S_contour_set[index].reshape(1,-1))
             r_wave = max(d_skel, 0.2*len(S_contour_set)*k+b)
             distance = 1 - d / r_wave
-        S_pixels.append(Pixel([i,j],distance,patchsize,max_patch))
+            if distance < 0:
+                distance = 0
+        S_pixels.append(Pixel([i,j],distance,patchsize,max_patch,max_effect))
+print time.clock() - t0, "seconds to calculate S_pixels"
 
+T_skel_nbrs = NearestNeighbors(n_neighbors=1, algorithm='ball_tree').fit(T_skel_set)
+distances, indices = T_skel_nbrs.kneighbors(T_contour_set)
+y=np.sort(distances,axis=None)
+x=range(len(distances))
+#plt.scatter(x,y)
+#plt.show()
+k,b = np.polyfit(x, y, 1)
+r_bar = 0.5*len(T_contour_set)*k+b
 
-#nbrs = NearestNeighbors(n_neighbors=1, algorithm='ball_tree').fit(X)
+t0 = time.clock()
+T_contour_nbrs = NearestNeighbors(n_neighbors=1, algorithm='ball_tree').fit(T_contour_set)
+T_pixels = []
+for i in range(h-patch_sizes[0]):
+    for j in range(w-patch_sizes[0]):
+        d, index = T_contour_nbrs.kneighbors(np.array([i,j]).reshape(1,-1))
+        if ~T[i,j]:
+            distance = 1 + d / r_bar
+        else:
+            d_skel, ind = T_skel_nbrs.kneighbors(T_contour_set[index].reshape(1,-1))
+            r_wave = max(d_skel, 0.2*len(T_contour_set)*k+b)
+            distance = 1 - d / r_wave
+            if distance < 0:
+                distance = 0
+        T_pixels.append(Pixel([i,j],distance,patchsize,max_patch,max_effect))
+print time.clock() - t0, "seconds to calculate T_pixels"
