@@ -1,5 +1,5 @@
 # -*- coding: UTF-8 -*-
-from patchmatch import patch_match
+# from patchmatch import patch_match
 import numpy as np
 from PIL import Image
 import skimage
@@ -48,6 +48,8 @@ for i in range(h):
     for j in range(w):
         if S[i,j] and np.count_nonzero(S[i-1:i+2,j-1:j+2]) >= 8:
             S_contour[i,j]=False
+
+
 S_contour_set = np.argwhere(S_contour==True)
 
 T_contour = deepcopy(T)
@@ -55,6 +57,8 @@ for i in range(h):
     for j in range(w):
         if T[i,j] and np.count_nonzero(T[i-1:i+2,j-1:j+2]) >= 8:
             T_contour[i,j]=False
+
+
 T_contour_set = np.argwhere(T_contour==True)
 
 S_skel_nbrs = NearestNeighbors(n_neighbors=1, algorithm='ball_tree').fit(S_skel_set)
@@ -108,7 +112,17 @@ for i in range(h-patch_sizes[0]):
             if distance < 0:
                 distance = 0
         S_pixels.append(Pixel([i,j],distance,patchsize,max_patch,max_effect))
+
+
 print time.clock() - t0, "seconds to calculate S_pixels"
+
+# Probability table (finishing)
+distance_list = [float(a.distance) for a in S_pixels]
+bins = range(101) * np.array(max(distance_list)) / 100
+omega = np.digitize(distance_list,bins)
+patchsize_list = [int(a.patchsize) for a in S_pixels]
+
+
 
 T_skel_nbrs = NearestNeighbors(n_neighbors=1, algorithm='ball_tree').fit(T_skel_set)
 distances, indices = T_skel_nbrs.kneighbors(T_contour_set)
@@ -134,4 +148,23 @@ for i in range(h-patch_sizes[0]):
             if distance < 0:
                 distance = 0
         T_pixels.append(Pixel([i,j],distance,patchsize,max_patch,max_effect))
+
+
 print time.clock() - t0, "seconds to calculate T_pixels"
+
+t0 = time.clock()
+T_prime = np.zeros([h, w , 3],dtype=np.float64) + 9999
+for i in range(h-patch_sizes[0]):
+    for j in range(w-patch_sizes[0]):
+        if np.array_equal(T_prime[i,j],[9999,9999,9999]):
+            print i,j
+            patch_distance = 9999
+            size = 0
+            for p in S_pixels:
+                if np.linalg.norm(p.patch-T[i:i+p.patchsize,j:j+p.patchsize]) < patch_distance:
+                    patch_distance = np.linalg.norm(p.patch-T[i:i+p.patchsize,j:j+p.patchsize])
+                    patch = p
+            T_prime[i:i+patch.patchsize,j:j+patch.patchsize] = patch.effect
+print time.clock() - t0, "seconds to calculate T_prime"
+io.imshow(T_prime)
+io.show()
