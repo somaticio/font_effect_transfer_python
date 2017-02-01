@@ -160,11 +160,19 @@ for i in range(h-patch_sizes[0]):
             print i,j
             patch_distance = 9999
             size = 0
+            patch = []
             for p in S_pixels:
                 if np.linalg.norm(p.patch-T[i:i+p.patchsize,j:j+p.patchsize]) < patch_distance:
                     patch_distance = np.linalg.norm(p.patch-T[i:i+p.patchsize,j:j+p.patchsize])
                     patch = p
             T_prime[i:i+patch.patchsize,j:j+patch.patchsize] = patch.effect
+
+for i in range(h-patch_sizes[0]):
+    for j in range(w-patch_sizes[0]):
+        if np.array_equal(T_prime[i,j],[9999,9999,9999]):
+            T_prime[i,j] = [0,0,0]
+
 print time.clock() - t0, "seconds to calculate T_prime"
 io.imshow(T_prime)
 io.show()
+io.imsave("T_prime.jpg", T_prime)
