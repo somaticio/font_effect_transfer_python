@@ -167,8 +167,8 @@ for i in range(h-patch_sizes[0]):
                     patch = p
             T_prime[i:i+patch.patchsize,j:j+patch.patchsize] = patch.effect
 
-for i in range(h-patch_sizes[0]):
-    for j in range(w-patch_sizes[0]):
+for i in range(h):
+    for j in range(w):
         if np.array_equal(T_prime[i,j],[9999,9999,9999]):
             T_prime[i,j] = [0,0,0]
 
