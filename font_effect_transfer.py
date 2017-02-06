@@ -9,7 +9,7 @@ from skimage import img_as_bool
 from sklearn.neighbors import NearestNeighbors
 
 from copy import copy, deepcopy
-import matplotlib.pyplot as plt
+#import matplotlib.pyplot as plt
 import time
 
 
@@ -173,6 +173,6 @@ for i in range(h-patch_sizes[0]):
             T_prime[i,j] = [0,0,0]
 
 print time.clock() - t0, "seconds to calculate T_prime"
+io.imsave("T_prime.jpg", T_prime)
 io.imshow(T_prime)
 io.show()
-io.imsave("T_prime.jpg", T_prime)
