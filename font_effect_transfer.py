@@ -12,6 +12,7 @@ from copy import copy, deepcopy
 import matplotlib.pyplot as plt
 import time
 
+import pandas as pd
 
 # Read S and T as binary images
 S = img_as_bool(io.imread("S.jpg", as_grey=True))
@@ -116,11 +117,12 @@ for i in range(h-patch_sizes[0]):
 
 print time.clock() - t0, "seconds to calculate S_pixels"
 
-# Probability table (finishing)
+# Probability table
 distance_list = [float(a.distance) for a in S_pixels]
 bins = range(101) * np.array(max(distance_list)) / 100
 omega = np.digitize(distance_list,bins)
 patchsize_list = [int(a.patchsize) for a in S_pixels]
+table = df.groupby('bin')['patchsize'].value_counts() / df.groupby('bin')['patchsize'].count()
 
 
 
